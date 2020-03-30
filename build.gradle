@@ -1,0 +1,27 @@
+// the resources required by the gradle script itself
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("io.spring.javaformat:spring-javaformat-gradle-plugin:0.0.6")
+    }
+}
+
+apply plugin: 'java'
+group 'com.songmengyuan.eos'
+apply plugin: 'io.spring.javaformat'
+apply plugin: 'checkstyle'
+
+checkstyle {
+    toolVersion = "8.11"
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    checkstyle("io.spring.javaformat:spring-javaformat-checkstyle:0.0.6")
+    compile group: 'io.netty', name: 'netty-all', version: '4.1.42.Final'
+}
+
