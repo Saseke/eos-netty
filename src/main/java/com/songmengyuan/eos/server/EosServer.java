@@ -1,14 +1,18 @@
 package com.songmengyuan.eos.server;
 
+import com.songmengyuan.eos.protocol.MessageDecoder;
+import com.songmengyuan.eos.protocol.MessageEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import java.text.SimpleDateFormat;
+import java.util.concurrent.TimeUnit;
 
 public class EosServer {
 
@@ -28,13 +32,16 @@ public class EosServer {
 		try {
 			ServerBootstrap serverBootstrap = new ServerBootstrap();
 			serverBootstrap.group(boss, workers).channel(NioServerSocketChannel.class)
-					.option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true)
+					.option(ChannelOption.SO_BACKLOG, 128).handler(new LoggingHandler(LogLevel.INFO))
+					.childOption(ChannelOption.SO_KEEPALIVE, true)
 					.childHandler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast("decoder", new StringDecoder());
-							pipeline.addLast("encoder", new StringEncoder());
+							pipeline.addLast("decoder", new MessageDecoder());
+							pipeline.addLast("encoder", new MessageEncoder());
+							pipeline.addLast(new IdleStateHandler(60, 60, 600, TimeUnit.SECONDS));
+							pipeline.addLast(new EosHeartBeatHandler());
 							pipeline.addLast("serviceHandler", new EosServerServiceHandler());
 						}
 					});
